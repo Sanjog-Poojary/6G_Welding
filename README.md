@@ -62,4 +62,4 @@ Static files — deploy anywhere:
 
 ## License
 
-MIT © 2026 Antigravity Industrial
+MIT © 2026 ArcNexus
