@@ -1,4 +1,4 @@
-# Project Antigravity — 6G Welder Hiring Page
+# Project ArcNexus — 6G Welder Hiring Page
 
 > A high-conversion, standalone hiring landing page built to attract and onboard certified **6G pipe welders** for critical pipeline and infrastructure projects.
 
@@ -11,7 +11,7 @@
 | Structure | HTML5 |
 | Styling | Vanilla CSS |
 | Logic | Vanilla JS (ES Modules) |
-| Backend | Firebase v10 — Firestore + Storage |
+| Backend | **Supabase** (PostgreSQL + Storage) |
 
 ---
 
@@ -21,7 +21,7 @@
 6G_Welding/
 ├── index.html          ← Landing page
 ├── styles.css          ← Design system & components
-├── main.js             ← Firebase integration + form logic
+├── main.js             ← Supabase integration + form logic
 ├── PRD.md              ← Product requirements
 └── FRONTEND_VISUAL_DOC.md  ← Design specifications
 ```
@@ -42,20 +42,20 @@ npx serve .
 
 ---
 
-## Firebase Setup
+## Supabase Setup
 
-1. Create a Firebase project and enable **Firestore** and **Storage**
-2. Add your project config to the `firebaseConfig` object at the top of `main.js`
-3. Set appropriate **Firestore** and **Storage Security Rules** before going live
+1. Create a [Supabase project](https://database.new) (100% Free, no credit card required)
+2. Copy `supabase-config.example.js` to `supabase-config.js` and add your **Project URL** and **anon public key**.
+3. Create a table named `applications` with these text columns: `full_name`, `phone`, `email`, `years_exp`, `cert_url`, `resume_url`, and `status` (default: 'pending').
+4. Create two public Storage buckets: `certifications` and `resumes`.
 
 ---
 
 ## Deployment
 
-Static files — deploy anywhere:
+Since we moved off Firebase Hosting, you can deploy this static site anywhere instantly:
 
 - **GitHub Pages** → Settings → Pages → Deploy from `main`
-- **Firebase Hosting** → `firebase deploy --only hosting`
 - **Vercel / Netlify** → Connect repo, auto-detected as static
 
 ---

@@ -4,48 +4,44 @@
    ───────────────────────────────────────────────────────────────────────── */
 
 // ════════════════════════════════════════════════════════════════════════════
-// SECTION A — Firebase Configuration & Initialization
-// Config is loaded from firebase-config.js (gitignored — never committed).
-// Copy firebase-config.example.js → firebase-config.js and fill in your values.
+// SECTION A — Supabase Configuration & Initialization
+// Config is loaded from supabase-config.js (gitignored — never committed).
+// Copy supabase-config.example.js → supabase-config.js and fill in your values.
 // ════════════════════════════════════════════════════════════════════════════
 
-import { initializeApp }          from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
-import { getFirestore, collection, addDoc, serverTimestamp }
-                                  from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
-import { getStorage, ref, uploadBytes, getDownloadURL }
-                                  from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js';
-import { firebaseConfig }         from './firebase-config.js';
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.43.4/+esm';
+import { supabaseConfig } from './supabase-config.js';
 
-const app       = initializeApp(firebaseConfig);
-const db        = getFirestore(app);
-const storage   = getStorage(app);
-
+const supabase = createClient(supabaseConfig.url, supabaseConfig.anonKey);
 
 // ════════════════════════════════════════════════════════════════════════════
-// SECTION B — Firebase Submit Handler
+// SECTION B — Supabase Submit Handler
 //
-// Firestore collection : "applications"
-// Storage buckets      : "certifications/{timestamp}-{filename}"
-//                        "resumes/{timestamp}-{filename}"
+// Database table : "applications"
+// Storage buckets: "certifications"
+//                  "resumes"
 //
-// Firestore document schema:
+// Database schema:
 // {
-//   full_name  : string   (required)
-//   phone      : string   (required)
-//   email      : string   (required)
-//   years_exp  : string   (required)
-//   cert_url   : string   (Storage download URL)
-//   resume_url : string | null
+//   full_name  : text     (required)
+//   phone      : text     (required)
+//   email      : text     (required)
+//   years_exp  : text     (required)
+//   cert_url   : text     (Storage public URL)
+//   resume_url : text | null
 //   status     : "pending"
-//   created_at : Timestamp (serverTimestamp)
 // }
 // ════════════════════════════════════════════════════════════════════════════
 
 async function uploadFile(bucket, file) {
-  const path      = `${bucket}/${Date.now()}-${file.name}`;
-  const storageRef = ref(storage, path);
-  await uploadBytes(storageRef, file);
-  return getDownloadURL(storageRef);
+  const path = `${Date.now()}-${file.name}`;
+  const { data, error } = await supabase.storage.from(bucket).upload(path, file);
+  
+  if (error) throw error;
+  
+  // Get public URL
+  const { data: publicUrlData } = supabase.storage.from(bucket).getPublicUrl(path);
+  return publicUrlData.publicUrl;
 }
 
 async function submitApplication(formData) {
@@ -58,8 +54,8 @@ async function submitApplication(formData) {
     resumeUrl = await uploadFile('resumes', formData.resumeFile);
   }
 
-  // 3 — Write application record to Firestore
-  await addDoc(collection(db, 'applications'), {
+  // 3 — Write application record to Supabase DB
+  const { error } = await supabase.from('applications').insert({
     full_name:  formData.fullName,
     phone:      formData.phone,
     email:      formData.email,
@@ -67,8 +63,9 @@ async function submitApplication(formData) {
     cert_url:   certUrl,
     resume_url: resumeUrl,
     status:     'pending',
-    created_at: serverTimestamp(),
   });
+
+  if (error) throw error;
 }
 
 
